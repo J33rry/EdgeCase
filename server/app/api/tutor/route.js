@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { getClient, MODEL, MAX_OUTPUT_TOKENS } from "@/lib/ai";
+import { eventBase, recordEvent } from "@/lib/analytics";
 import { buildMessages, validateBody } from "@/lib/prompt";
 import { checkRateLimit } from "@/lib/rateLimit";
 
@@ -46,6 +48,7 @@ export async function OPTIONS(req) {
 }
 
 export async function POST(req) {
+  const t0 = Date.now();
   const cors = corsHeaders(req.headers.get("origin"));
   if (!cors) return json(403, { error: "Origin not allowed." });
 
@@ -55,14 +58,23 @@ export async function POST(req) {
   } catch {
     return json(400, { error: "Invalid JSON body." }, cors);
   }
+  // Analytics rows are written after the response is sent (after() keeps the
+  // function alive on Vercel), so they never slow the reply down.
+  const base = eventBase(body);
+  const track = (fields) => after(() => recordEvent({ ...base, ...fields }));
+
   const invalid = validateBody(body);
-  if (invalid) return json(400, { error: invalid }, cors);
+  if (invalid) {
+    track({ status: "invalid", httpStatus: 400 });
+    return json(400, { error: invalid }, cors);
+  }
 
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "local";
   const installId = typeof body.installId === "string" ? body.installId.slice(0, 64) : "";
   const limit = Number(process.env.RATE_LIMIT_PER_HOUR) || 40;
-  const rl = checkRateLimit([`ip:${ip}`, installId && `id:${installId}`], limit);
+  const rl = await checkRateLimit([`ip:${ip}`, installId && `id:${installId}`], limit);
   if (!rl.ok) {
+    track({ status: "rate_limited", httpStatus: 429 });
     return json(
       429,
       { error: `Rate limit reached. Try again in ${Math.ceil(rl.retryAfter / 60)} min.` },
@@ -84,25 +96,51 @@ export async function POST(req) {
     const status = err?.status === 429 ? 429 : 502;
     const error =
       status === 429 ? "The AI provider is busy. Try again shortly." : "The AI provider request failed.";
+    track({ status: "provider_error", httpStatus: status, durationMs: Date.now() - t0 });
     return json(status, { error }, cors);
   }
+
+  // Resolved once the stream ends, with the outcome to record.
+  let settle;
+  const finished = new Promise((resolve) => (settle = resolve));
+  after(() => finished.then((fields) => recordEvent({ ...base, httpStatus: 200, ...fields })));
+
+  let ttftMs = null;
+  let outputChars = 0;
+  const outcome = (status) => ({ status, ttftMs, outputChars, durationMs: Date.now() - t0 });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      let status = "ok";
       try {
         for await (const chunk of upstream) {
           const text = chunk.choices?.[0]?.delta?.content;
-          if (text) controller.enqueue(encoder.encode(text));
+          if (text) {
+            ttftMs ??= Date.now() - t0;
+            outputChars += text.length;
+            controller.enqueue(encoder.encode(text));
+          }
         }
       } catch (err) {
-        console.error("AI stream error:", err?.message);
-        controller.enqueue(encoder.encode("\n\n_(The response was interrupted. Please try again.)_"));
+        if (upstream.controller?.signal?.aborted) {
+          status = "aborted";
+        } else {
+          status = "stream_error";
+          console.error("AI stream error:", err?.message);
+          controller.enqueue(encoder.encode("\n\n_(The response was interrupted. Please try again.)_"));
+        }
       } finally {
-        controller.close();
+        settle(outcome(status));
+        try {
+          controller.close();
+        } catch {
+          /* already closed by cancel() */
+        }
       }
     },
     cancel() {
+      settle(outcome("aborted"));
       upstream.controller?.abort();
     },
   });

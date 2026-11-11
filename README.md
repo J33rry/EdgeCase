@@ -29,10 +29,25 @@ Fill in `server/.env.local`:
 | `RATE_LIMIT_PER_HOUR` | Requests allowed per install and per IP each hour (default 40). |
 | `MAX_OUTPUT_TOKENS` | Reply length cap (default 1200). |
 | `MAX_TOKENS_PARAM` | Set to `max_completion_tokens` if your model rejects `max_tokens`. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis for rate limiting. If empty, limits are kept in memory (local dev only). |
+| `DATABASE_URL` | Neon Postgres connection string for analytics. If empty, analytics is off. |
+| `ANALYTICS_SALT` | Random string used to hash install ids. Set it once. |
+| `ANALYTICS_PASSWORD`, `ANALYTICS_SECRET` | Password for `/analytics`, and a random secret that signs its cookie. |
+
+Create the analytics table once (and again whenever `server/db/schema.js` changes):
+
+```bash
+npm run db:migrate -w server
+```
 
 ```bash
 npm run dev:server        # http://localhost:3000
 ```
+
+### Redis and Postgres
+
+- **Upstash Redis** (free tier): create a database at console.upstash.com and copy the REST URL and token. Rate limits use a 1-hour sliding window per IP and per install, shared by every server instance.
+- **Neon Postgres** (free tier): create a project at console.neon.tech and copy the pooled connection string into `DATABASE_URL`. Tables are defined with Drizzle in `server/db/schema.js`; after changing the schema, run `npm run db:generate -w server`, then `db:migrate`. `npm run db:studio -w server` opens a table browser.
 
 ## 2. Load the extension
 
@@ -52,14 +67,14 @@ npm run build -w extension     # or: npm run dev:ext  (rebuilds as you edit)
 2. Add the environment variables from step 1.
 3. Set `VITE_SERVER_URL` in `extension/.env` to the deployed URL (copy `extension/.env.example` if the file doesn't exist), then rebuild with `npm run build -w extension`. The URL is fixed at build time, and users can't change it.
 
-> **Rate limiting on Vercel:** `server/lib/rateLimit.js` keeps its counts in memory, and serverless instances don't share memory. Before you share the extension widely, swap it for a shared store such as [Upstash Ratelimit](https://github.com/upstash/ratelimit-js), because you pay for every tutor request.
-
 ## How it works
 
 - **LeetCode data** comes from `leetcode.com/graphql` and is fetched by the background service worker (`extension/src/lib/leetcode.js`). A session-scoped `declarativeNetRequest` rule sets `Origin`/`Referer` to leetcode.com, but only on requests the extension itself makes. Results are cached for 10 minutes, and ↻ refreshes them.
 - **Friends** are stored in `chrome.storage.sync`, so the list follows your Chrome profile (50 at most).
 - **Tutor chats** are saved per problem in `chrome.storage.session` and cleared when the browser closes. The panel runs inside a Shadow DOM so LeetCode's CSS doesn't affect it.
 - **Review my code** reads the LeetCode editor through `chrome.scripting.executeScript` in the page's main world, because LeetCode's Monaco editor isn't visible to content scripts. If the editor still has the starter code, the review isn't sent. Anything typed in the chat box is sent along with the code.
+- **Rate limiting** (`server/lib/rateLimit.js`) uses Upstash Redis, so limits hold across Vercel instances. If Redis isn't configured or is down, it falls back to an in-memory limit.
+- **Analytics**: each tutor request writes one metadata-only row to `tutor_events` in Neon. The row holds a hashed install id, the tutor feature, the problem, the status and timings, but no chat text, code or IP. The insert runs after the response is sent, so it doesn't slow replies. Open **`/analytics`** on the server and sign in with `ANALYTICS_PASSWORD` to see requests per day, feature usage, top problems, latency percentiles and recent failures.
 - **Guardrails** live in the system prompt in `server/lib/prompt.js`. The server also checks and trims every request before passing it to the provider.
 
 ## Notes and limits

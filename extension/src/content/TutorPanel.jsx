@@ -107,7 +107,7 @@ export default function TutorPanel() {
   }, [messages, open]);
 
   const send = useCallback(
-    (text, { isHint = false, restore } = {}) => {
+    (text, { isHint = false, restore, action = "chat" } = {}) => {
       const content = text.trim();
       if (!content || streaming || !problem.title || !problem.statement) return;
       setError("");
@@ -150,6 +150,7 @@ export default function TutorPanel() {
       port.postMessage({
         problem: {
           id: problem.id,
+          slug: problem.slug,
           title: problem.title,
           difficulty: problem.difficulty,
           tags: problem.tags,
@@ -158,6 +159,7 @@ export default function TutorPanel() {
         },
         messages: history.map(({ role, content }) => ({ role, content })),
         hintLevel,
+        action,
       });
     },
     [messages, streaming, problem, hintLevel, slug],
@@ -199,7 +201,7 @@ export default function TutorPanel() {
         (note ? `\n\n${note}` : "") +
         (partial ? "\n\n(Only part of my code could be included.)" : "") +
         `\n\n\`\`\`${language || ""}\n${code}\n\`\`\``,
-      { restore: note },
+      { restore: note, action: "code" },
     );
   };
 
@@ -214,10 +216,10 @@ export default function TutorPanel() {
         hintLevel >= 3
           ? "I've had all three hint levels. Ask me a question that helps me get unstuck."
           : `Give me hint level ${hintLevel + 1}/3.`,
-        { isHint: true },
+        { isHint: true, action: "hint" },
       );
     } else {
-      send(q.text);
+      send(q.text, { action: q.id });
     }
   };
 

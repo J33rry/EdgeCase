@@ -10,8 +10,12 @@ export default function Home() {
       </p>
       <h2 style={{ fontSize: 18 }}>Privacy</h2>
       <ul>
-        <li>Nothing is stored on this server. Requests are processed and discarded.</li>
-        <li>A random install id and your IP address are used only for in-memory rate limiting.</li>
+        <li>Your chat with the tutor and your code are never stored. Requests are processed and discarded.</li>
+        <li>
+          For each tutor request we keep anonymous usage data: a one-way hash of a random install id,
+          which problem and tutor feature you used, and timings. No IP address, chat text or code.
+        </li>
+        <li>Your IP address and the install id are used only for rate limiting and expire within an hour.</li>
         <li>Your LeetCode profile and friends list are fetched by the extension directly from LeetCode and never sent here.</li>
       </ul>
     </main>

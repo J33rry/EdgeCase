@@ -1,15 +1,26 @@
 {
-  "name": "edgecase-server",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "next": "^16.4.6",
-    "openai": "^7.55.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
-  }
+    "name": "edgecase-server",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:studio": "drizzle-kit studio",
+        "db:push": "drizzle-kit push"
+    },
+    "dependencies": {
+        "@neondatabase/serverless": "^1.2.0",
+        "@upstash/ratelimit": "^2.2.0",
+        "@upstash/redis": "^1.41.0",
+        "drizzle-orm": "^0.45.4",
+        "next": "^16.4.6",
+        "openai": "^7.55.0",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1"
+    },
+    "devDependencies": {
+        "drizzle-kit": "^0.31.11"
+    }
 }
