@@ -8,18 +8,28 @@ export const metadata = { title: "Sign in · EdgeCase analytics", robots: { inde
 export default async function LoginPage() {
   if (await isAdmin()) redirect("/analytics");
   return (
-    <main style={{ maxWidth: 360, margin: "0 auto", padding: "96px 16px" }}>
-      <h1 style={{ color: "#ffa116", marginBottom: 4, fontSize: 24 }}>EdgeCase analytics</h1>
-      {authConfigured() ? (
-        <>
-          <p style={{ marginTop: 0, opacity: 0.7 }}>Admins only.</p>
-          <LoginForm />
-        </>
-      ) : (
-        <p style={{ opacity: 0.8 }}>
-          Analytics is turned off. Set <code>ANALYTICS_PASSWORD</code> and <code>ANALYTICS_SECRET</code> on the server to enable it.
-        </p>
-      )}
+    <main className="a-login">
+      <div className="a-brand">
+        <div className="a-logo" aria-hidden>
+          EC
+        </div>
+        <div>
+          <h1>Tutor analytics</h1>
+          <p>EdgeCase admin</p>
+        </div>
+      </div>
+      <div className="a-card">
+        {authConfigured() ? (
+          <>
+            <p style={{ marginTop: 0, color: "var(--text-2)" }}>Admins only. Enter the dashboard password.</p>
+            <LoginForm />
+          </>
+        ) : (
+          <p style={{ margin: 0, color: "var(--text-2)", lineHeight: 1.6 }}>
+            Analytics is turned off. Set <code>ANALYTICS_PASSWORD</code> and <code>ANALYTICS_SECRET</code> on the server to enable it.
+          </p>
+        )}
+      </div>
     </main>
   );
 }
