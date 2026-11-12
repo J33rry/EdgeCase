@@ -1,0 +1,531 @@
+@import "tailwindcss";
+
+/* Cinematic (pinned, scrubbed) mode: wide screens, motion allowed.
+   Must stay in sync with CINE_QUERY in components/landing/config.ts. */
+@custom-variant cine (@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (prefers-reduced-motion: no-preference));
+
+@theme {
+  --color-ec-bg: #080a09;
+  --color-ec-orange: #ffae00;
+  --color-ec-green: #00e5a0;
+  --color-ec-muted: #8a8f8c;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --ec-orange: #ffae00;
+  --ec-green: #00e5a0;
+  --ec-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  background: #080a09;
+}
+
+.ec-root {
+  min-height: 100vh;
+  background: #080a09;
+  color: #f4f4f2;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ec-root ::selection {
+  background: rgba(255, 174, 0, 0.35);
+}
+
+@layer components {
+/* ───────────────────────────── Glass primitives ───────────────────────────── */
+
+.glass {
+  position: relative;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.012) 38%, rgba(0, 0, 0, 0.18)),
+    rgba(12, 15, 14, 0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+
+/* Luminous gradient border, painted with a masked pseudo-element. */
+.glass-edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--edge-w, 1.5px);
+  background: var(--edge, linear-gradient(140deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.04)));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Specular sheen across the top of a glass surface. */
+.glass-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 32%);
+  pointer-events: none;
+}
+
+.edge-orange {
+  --edge: linear-gradient(200deg, rgba(255, 210, 120, 0.55) 0%, #ffae00 45%, #ff9500 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 18px rgba(255, 174, 0, 0.38),
+    0 0 60px rgba(255, 150, 0, 0.18),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+
+.edge-green {
+  --edge: linear-gradient(100deg, rgba(255, 174, 0, 0.75) 0%, rgba(255, 174, 0, 0.15) 22%, rgba(0, 229, 160, 0.35) 55%, #00e5a0 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    14px 0 40px -10px rgba(0, 229, 160, 0.35),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+
+.edge-green-solid {
+  --edge: linear-gradient(170deg, rgba(120, 255, 210, 0.7), #00e5a0 50%, rgba(0, 229, 160, 0.5));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 18px rgba(0, 229, 160, 0.32),
+    0 0 50px rgba(0, 229, 160, 0.14);
+}
+
+.subpanel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Glow overlays: pre-rendered shadows whose opacity GSAP animates (cheap on the compositor). */
+.glow-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+}
+
+}
+
+/* ───────────────────────── Feature highlight system ─────────────────────────
+   An ancestor `.ec-scope[data-state=…]` selects the active feature. Each zone
+   transitions between normal, lit and muted. The desktop timeline flips the
+   attribute at scroll thresholds; mobile flips it when a section enters view. */
+
+.zone {
+  transition:
+    opacity 0.7s var(--ec-ease),
+    filter 0.7s var(--ec-ease),
+    box-shadow 0.7s var(--ec-ease),
+    border-color 0.7s var(--ec-ease),
+    background-color 0.7s var(--ec-ease),
+    transform 0.7s var(--ec-ease);
+}
+
+/* Dashboard ─────────────────────── */
+
+.ec-scope:is([data-state="stats"], [data-state="progress"]) .dz-leader,
+.ec-scope[data-state="leaderboard"] .dz-progress {
+  opacity: 0.32;
+  filter: saturate(0.15) brightness(0.75);
+}
+
+.ec-scope:is([data-state="stats"], [data-state="progress"], [data-state="leaderboard"]) .dz-head {
+  opacity: 0.55;
+}
+
+.ec-scope[data-state="stats"] .dz-progress {
+  border-color: rgba(255, 174, 0, 0.6);
+  background-color: rgba(255, 174, 0, 0.06);
+  box-shadow:
+    0 0 0 1px rgba(255, 174, 0, 0.25),
+    0 0 26px rgba(255, 174, 0, 0.3),
+    inset 0 0 28px rgba(0, 229, 160, 0.06);
+}
+
+.ec-scope[data-state="stats"] .ring-label,
+.ec-scope[data-state="progress"] .ring-label {
+  color: #fff;
+}
+
+.ec-scope[data-state="stats"] .ring-sub {
+  opacity: 1;
+  transform: none;
+}
+
+.ring-sub {
+  opacity: 0;
+  transform: translateY(-3px);
+  transition: opacity 0.6s var(--ec-ease), transform 0.6s var(--ec-ease);
+}
+
+.ring-arc {
+  transition: filter 0.7s var(--ec-ease);
+}
+
+.ec-scope:is([data-state="stats"], [data-state="progress"]) .ring-arc {
+  filter: drop-shadow(0 0 5px var(--ring-c)) saturate(1.25);
+}
+
+.ring-halo {
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.8s var(--ec-ease), transform 0.8s var(--ec-ease);
+}
+
+.ec-scope[data-state="progress"] .ring-halo {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ec-scope[data-state="progress"] .ring-arc {
+  animation: ring-fill 1.4s var(--ec-ease) both;
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-len);
+  }
+  to {
+    stroke-dashoffset: var(--ring-off);
+  }
+}
+
+.ring-delta {
+  opacity: 0;
+  transform: translateY(4px) scale(0.9);
+  transition: opacity 0.5s var(--ec-ease), transform 0.5s var(--ec-ease);
+}
+
+.ec-scope[data-state="progress"] .ring-delta {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(0.35s + var(--i) * 0.12s);
+}
+
+.ec-scope[data-state="leaderboard"] .dz-leader {
+  border-color: rgba(255, 174, 0, 0.65);
+  background-color: rgba(255, 174, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(255, 174, 0, 0.3),
+    0 0 30px rgba(255, 174, 0, 0.32),
+    inset 0 0 24px rgba(255, 174, 0, 0.05);
+}
+
+.lb-you {
+  transition: box-shadow 0.7s var(--ec-ease), background-color 0.7s var(--ec-ease), border-color 0.7s var(--ec-ease);
+}
+
+.ec-scope[data-state="leaderboard"] .lb-you {
+  background-color: rgba(255, 174, 0, 0.2);
+  border-color: rgba(255, 190, 60, 0.95);
+  box-shadow:
+    0 0 16px rgba(255, 174, 0, 0.55),
+    inset 0 0 14px rgba(255, 174, 0, 0.18);
+}
+
+.ec-scope[data-state="leaderboard"] .lb-row {
+  animation: row-in 0.7s var(--ec-ease) both;
+  animation-delay: calc(var(--i) * 0.09s);
+}
+
+.ec-scope[data-state="leaderboard"] .lb-rank-change {
+  opacity: 1;
+  transform: none;
+}
+
+.lb-rank-change {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.5s 0.4s var(--ec-ease), transform 0.5s 0.4s var(--ec-ease);
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0.2;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* AI Tutor ─────────────────────── */
+
+.tz-act {
+  transition:
+    opacity 0.6s var(--ec-ease),
+    filter 0.6s var(--ec-ease),
+    background-color 0.6s var(--ec-ease),
+    border-color 0.6s var(--ec-ease),
+    box-shadow 0.6s var(--ec-ease);
+}
+
+.ec-scope[data-state="explain"] .tz-act:not([data-act="explain"]),
+.ec-scope[data-state="edge"] .tz-act:not([data-act="edge"]),
+.ec-scope[data-state="efficiency"] .tz-act:not([data-act="efficiency"]) {
+  opacity: 0.35;
+  filter: saturate(0.2);
+}
+
+.ec-scope[data-state="explain"] .tz-act[data-act="explain"],
+.ec-scope[data-state="edge"] .tz-act[data-act="edge"],
+.ec-scope[data-state="efficiency"] .tz-act[data-act="efficiency"] {
+  background-color: rgba(0, 229, 160, 0.16);
+  border-color: rgba(0, 229, 160, 0.85);
+  box-shadow:
+    0 0 18px rgba(0, 229, 160, 0.45),
+    inset 0 0 14px rgba(0, 229, 160, 0.15);
+  color: #fff;
+}
+
+.tz-greet {
+  transition: opacity 0.6s var(--ec-ease), filter 0.6s var(--ec-ease);
+}
+
+.ec-scope:is([data-state="explain"], [data-state="edge"], [data-state="efficiency"]) .tz-greet {
+  opacity: 0.45;
+}
+
+.tz-reply {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition:
+    opacity 0.5s var(--ec-ease),
+    transform 0.5s var(--ec-ease),
+    visibility 0s linear 0.5s;
+}
+
+.tz-reply > * {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.45s var(--ec-ease), transform 0.45s var(--ec-ease);
+}
+
+.ec-scope[data-state="explain"] .tz-reply[data-for="explain"],
+.ec-scope[data-state="edge"] .tz-reply[data-for="edge"],
+.ec-scope[data-state="efficiency"] .tz-reply[data-for="efficiency"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0.15s, 0.15s, 0s;
+}
+
+.ec-scope[data-state="explain"] .tz-reply[data-for="explain"] > *,
+.ec-scope[data-state="edge"] .tz-reply[data-for="edge"] > *,
+.ec-scope[data-state="efficiency"] .tz-reply[data-for="efficiency"] > * {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(0.3s + var(--i, 0) * 0.14s);
+}
+
+.tz-typing {
+  transition: opacity 0.3s;
+}
+
+.ec-scope:is([data-state="explain"], [data-state="edge"], [data-state="efficiency"]) .tz-typing {
+  opacity: 0;
+}
+
+/* Code lines: a background bar + gutter marker per line. */
+.code-line {
+  position: relative;
+}
+
+.code-line::before {
+  content: "";
+  position: absolute;
+  inset: 0 -10px 0 -36px;
+  background: var(--line-bg, rgba(0, 229, 160, 0.13));
+  border-left: 2px solid var(--line-mark, #00e5a0);
+  opacity: 0;
+  transition: opacity 0.6s var(--ec-ease);
+}
+
+.code-tag {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.5s var(--ec-ease), transform 0.5s var(--ec-ease);
+}
+
+.ec-scope[data-state="explain"] .code-line[data-l="5"]::before,
+.ec-scope[data-state="explain"] .code-line[data-l="6"]::before,
+.ec-scope[data-state="explain"] .code-line[data-l="7"]::before,
+.ec-scope[data-state="explain"] .code-line[data-l="9"]::before,
+.ec-scope[data-state="edge"] .code-line[data-l="6"]::before,
+.ec-scope[data-state="edge"] .code-line[data-l="9"]::before,
+.ec-scope[data-state="edge"] .code-line[data-l="11"]::before,
+.ec-scope[data-state="efficiency"] .code-line[data-l="6"]::before,
+.ec-scope[data-state="efficiency"] .code-line[data-l="7"]::before {
+  opacity: 1;
+}
+
+.ec-scope[data-state="edge"] .code-line {
+  --line-bg: rgba(255, 174, 0, 0.12);
+  --line-mark: #ffae00;
+}
+
+.ec-scope[data-state="efficiency"] .code-line {
+  --line-bg: rgba(255, 92, 92, 0.1);
+  --line-mark: #ff7a59;
+}
+
+.ec-scope[data-state="explain"] .code-tag[data-for="explain"],
+.ec-scope[data-state="edge"] .code-tag[data-for="edge"],
+.ec-scope[data-state="efficiency"] .code-tag[data-for="efficiency"] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.35s;
+}
+
+.ec-scope:is([data-state="explain"], [data-state="edge"], [data-state="efficiency"]) .code-line:not(:is([data-l="5"], [data-l="6"], [data-l="7"], [data-l="9"], [data-l="11"])) {
+  opacity: 0.55;
+}
+
+.ec-scope[data-state="explain"] .code-line[data-l="11"],
+.ec-scope[data-state="edge"] .code-line:is([data-l="5"], [data-l="7"]),
+.ec-scope[data-state="efficiency"] .code-line:is([data-l="5"], [data-l="9"], [data-l="11"]) {
+  opacity: 0.55;
+}
+
+.code-line {
+  transition: opacity 0.6s var(--ec-ease);
+}
+
+@layer components {
+/* Cursor-following glare for TiltCard */
+.tilt-glare {
+  opacity: 0;
+  transition: opacity 0.5s var(--ec-ease);
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 50%),
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.035) 28%,
+    transparent 55%
+  );
+}
+
+/* ───────────────────────────── Page chrome ───────────────────────────── */
+
+.btn-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #160f00;
+  font-weight: 650;
+  background: linear-gradient(180deg, #ffc533 0%, #ffae00 55%, #f59a00 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(150, 80, 0, 0.35),
+    0 0 0 1px rgba(255, 190, 60, 0.6),
+    0 10px 40px -6px rgba(255, 160, 0, 0.55),
+    0 0 80px -10px rgba(255, 160, 0, 0.35);
+  transition: box-shadow 0.35s var(--ec-ease), filter 0.35s var(--ec-ease);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -2px 0 rgba(150, 80, 0, 0.35),
+    0 0 0 1px rgba(255, 200, 80, 0.8),
+    0 14px 50px -6px rgba(255, 160, 0, 0.7),
+    0 0 110px -10px rgba(255, 160, 0, 0.45);
+}
+
+.btn-primary:focus-visible,
+.ec-root a:focus-visible,
+.ec-root button:focus-visible {
+  outline: 2px solid #00e5a0;
+  outline-offset: 3px;
+}
+
+.word-mask {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.word {
+  display: inline-block;
+}
+
+}
+
+@keyframes float-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--r, 0deg));
+  }
+  50% {
+    transform: translate3d(0, -14px, 0) rotate(calc(var(--r, 0deg) + 4deg));
+  }
+}
+
+.fragment {
+  animation: float-a var(--d, 9s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(200%);
+  }
+}
+
+.scroll-cue-bar {
+  animation: scroll-cue 1.8s var(--ec-ease) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-root *,
+  .ec-root *::before,
+  .ec-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* Feature step indicator (cinematic stage) */
+.ec-steps {
+  opacity: 0;
+  transition: opacity 0.6s var(--ec-ease);
+}
+.ec-scope:not([data-state="hero"]) .ec-steps {
+  opacity: 1;
+}
+.ec-steps li {
+  transition: width 0.6s var(--ec-ease), background-color 0.6s var(--ec-ease), box-shadow 0.6s var(--ec-ease);
+}
+.ec-scope[data-state="stats"] [data-step="stats"],
+.ec-scope[data-state="progress"] [data-step="progress"],
+.ec-scope[data-state="leaderboard"] [data-step="leaderboard"] {
+  width: 44px;
+  background: #ffae00;
+  box-shadow: 0 0 10px rgba(255, 174, 0, 0.7);
+}
+.ec-scope[data-state="explain"] [data-step="explain"],
+.ec-scope[data-state="edge"] [data-step="edge"],
+.ec-scope[data-state="efficiency"] [data-step="efficiency"] {
+  width: 44px;
+  background: #00e5a0;
+  box-shadow: 0 0 10px rgba(0, 229, 160, 0.7);
+}
