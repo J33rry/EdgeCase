@@ -7,6 +7,13 @@
  */
 
 export const WORLD_W = 1600;
+
+export const STORE_URL = "https://github.com/J33rry/EdgeCase#2-load-the-extension";
+export const REPO_URL = "https://github.com/J33rry/EdgeCase";
+export const DOCS_URL = "/docs";
+
+/** Window event the navbar and progress rail fire to jump to a point on the tour. */
+export const NAV_EVENT = "ec:navigate";
 export const WORLD_H = 900;
 
 /** Media query for the pinned, scrubbed experience. Mirrors the `cine` variant in landing.css. */
@@ -23,6 +30,8 @@ export interface Feature {
   object: FeatureObject;
   index: string;
   eyebrow: string;
+  /** Short label for the progress rail. */
+  short: string;
   heading: string;
   description: string;
   /** Human-readable name of the component this feature lights up. */
@@ -34,6 +43,7 @@ export interface Feature {
 export const FEATURES: Feature[] = [
   {
     id: "stats",
+    short: "Stats",
     object: "dashboard",
     index: "01",
     eyebrow: "User statistics",
@@ -45,6 +55,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "progress",
+    short: "Progress",
     object: "dashboard",
     index: "02",
     eyebrow: "Coding progress",
@@ -55,6 +66,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "leaderboard",
+    short: "Leaderboard",
     object: "dashboard",
     index: "03",
     eyebrow: "Leaderboard",
@@ -66,6 +78,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "explain",
+    short: "Explain",
     object: "tutor",
     index: "04",
     eyebrow: "Explain this solution",
@@ -77,6 +90,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "edge",
+    short: "Edge cases",
     object: "tutor",
     index: "05",
     eyebrow: "Find edge cases",
@@ -87,6 +101,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "efficiency",
+    short: "Efficiency",
     object: "tutor",
     index: "06",
     eyebrow: "Improve efficiency",
@@ -115,7 +130,7 @@ export interface Pose {
 /** Keyframe poses for each object at each phase of the scroll experience. */
 export const POSES: Record<"hero" | "dashboard" | "tutor", { dash: Pose; tutor: Pose }> = {
   hero: {
-    dash: { x: 735, y: 432, scale: 1, rotationY: -7, rotationX: 2, z: 40, recede: 0 },
+    dash: { x: 765, y: 432, scale: 1, rotationY: -7, rotationX: 2, z: 40, recede: 0 },
     tutor: { x: 1190, y: 440, scale: 1, rotationY: -7, rotationX: 2, z: 0, recede: 0 },
   },
   dashboard: {
@@ -127,3 +142,16 @@ export const POSES: Record<"hero" | "dashboard" | "tutor", { dash: Pose; tutor: 
     tutor: { x: 1075, y: 482, scale: 1.24, rotationY: -6, rotationX: 1, z: 60, recede: 0 },
   },
 };
+
+/**
+ * Leader lines (world px) from a feature's copy to the zone it describes,
+ * measured with both objects at rest in that phase's pose.
+ */
+export const CONNECTORS: { id: StageState; from: [number, number]; to: [number, number]; color: string }[] = [
+  { id: "stats", from: [1112, 312], to: [632, 383], color: "#ffae00" },
+  { id: "progress", from: [1112, 264], to: [638, 381], color: "#ffae00" },
+  { id: "leaderboard", from: [1112, 280], to: [638, 643], color: "#ffae00" },
+  { id: "explain", from: [460, 264], to: [714, 470], color: "#00e5a0" },
+  { id: "edge", from: [460, 280], to: [714, 541], color: "#00e5a0" },
+  { id: "efficiency", from: [460, 280], to: [714, 494], color: "#00e5a0" },
+];

@@ -6,7 +6,7 @@ import AITutor3D from "./AITutor3D";
 import AmbientBackground from "./AmbientBackground";
 import Dashboard3D from "./Dashboard3D";
 import TiltCard from "./TiltCard";
-import { FEATURES, POSES, WORLD_H, WORLD_W, type Pose, type StageState } from "./config";
+import { CONNECTORS, FEATURES, NAV_EVENT, POSES, WORLD_H, WORLD_W, type Pose, type StageState } from "./config";
 
 /** CSS transform equivalent to the GSAP pose, so the first paint (before JS) is already correct. */
 export const poseTransform = (p: Pose) =>
@@ -69,12 +69,46 @@ const VisualStage = forwardRef<
 
         {children}
 
-        {/* Feature progress indicator, driven purely by data-state CSS. */}
-        <ol className="ec-steps absolute bottom-[42px] left-1/2 flex -translate-x-1/2 items-center gap-2" aria-hidden>
-          {FEATURES.map((f) => (
-            <li key={f.id} data-step={f.id} data-obj={f.object} className="h-[3px] w-5 rounded-full bg-white/15" />
+        {/* Leader lines from each feature's copy to the part of the object it describes. */}
+        <svg className="pointer-events-none absolute inset-0 z-[5] overflow-visible" width={WORLD_W} height={WORLD_H} aria-hidden>
+          {CONNECTORS.map((c) => {
+            const midX = (c.from[0] + c.to[0]) / 2;
+            return (
+              <g key={c.id} data-connector={c.id} className="ec-connector" style={{ color: c.color }}>
+                <path
+                  d={`M${c.from[0]} ${c.from[1]} C ${midX} ${c.from[1]}, ${midX} ${c.to[1]}, ${c.to[0]} ${c.to[1]}`}
+                  pathLength={1}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  className="ec-connector-line"
+                />
+                <circle cx={c.from[0]} cy={c.from[1]} r={3} fill="currentColor" className="ec-connector-start" />
+                <circle cx={c.to[0]} cy={c.to[1]} r={5} fill="currentColor" className="ec-connector-end" />
+                <circle cx={c.to[0]} cy={c.to[1]} r={5} fill="none" stroke="currentColor" className="ec-connector-pulse" />
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Tour progress rail: shows where you are and jumps to any feature. */}
+        <nav className="ec-rail glass glass-edge absolute bottom-[30px] left-1/2 z-20 flex items-center gap-1 rounded-full p-1.5" aria-label="Product tour sections">
+          {FEATURES.map((f, i) => (
+            <span key={f.id} className="flex items-center gap-1">
+              {i > 0 && f.object !== FEATURES[i - 1].object && <span className="mx-1.5 h-5 w-px bg-white/12" aria-hidden />}
+              <button
+                type="button"
+                data-step={f.id}
+                data-obj={f.object}
+                onClick={() => window.dispatchEvent(new CustomEvent(NAV_EVENT, { detail: f.id }))}
+                className="ec-rail-item flex h-[38px] items-center gap-2 rounded-full px-4 text-[14px] font-medium text-white/45"
+              >
+                <span className="ec-rail-index font-mono text-[11.5px] tabular-nums text-white/30">{f.index}</span>
+                {f.short}
+              </button>
+            </span>
           ))}
-        </ol>
+        </nav>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import Navbar from "@/components/landing/Navbar";
 import ScrollExperience from "@/components/landing/ScrollExperience";
 import MobileExperience from "@/components/landing/MobileExperience";
 import FinalCTA from "@/components/landing/FinalCTA";
+import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
   return (
@@ -16,6 +17,7 @@ export default function LandingPage() {
         <MobileExperience />
       </div>
       <FinalCTA />
+      <Footer />
     </main>
   );
 }

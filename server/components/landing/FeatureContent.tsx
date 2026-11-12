@@ -45,10 +45,10 @@ export default function FeatureContent({ feature, variant }: { feature: Feature;
         className={`pointer-events-none invisible absolute top-1/2 z-10 -translate-y-1/2 text-[16px] ${side}`}
       >
         <Eyebrow feature={feature} />
-        <h2 className="mt-6 text-[66px] font-bold leading-[0.98] tracking-[-0.045em] text-white">
+        <h2 className="font-display mt-6 text-[66px] font-bold leading-[0.98] tracking-[-0.04em] text-white">
           <Words text={feature.heading} />
         </h2>
-        <p data-part="desc" className="mt-7 text-[21px] leading-[1.5] tracking-[-0.01em] text-white/55">
+        <p data-part="desc" className="mt-7 max-w-[38ch] text-[21px] leading-[1.5] tracking-[-0.01em] text-white/70">
           {feature.description}
         </p>
       </article>
@@ -60,9 +60,9 @@ export default function FeatureContent({ feature, variant }: { feature: Feature;
       <Eyebrow feature={feature} />
       <AnimatedTitle
         lines={[feature.heading]}
-        className="mt-4 text-[clamp(2.25rem,9vw,3.5rem)] font-bold leading-[1] tracking-[-0.045em] text-white"
+        className="font-display mt-4 text-[clamp(2.25rem,9vw,3.5rem)] font-bold leading-[1] tracking-[-0.04em] text-white"
       />
-      <p className="mt-4 max-w-[34rem] text-[clamp(1rem,3.8vw,1.2rem)] leading-[1.55] text-white/55">{feature.description}</p>
+      <p className="mt-4 max-w-[38ch] text-[clamp(1rem,3.8vw,1.2rem)] leading-[1.55] text-white/70">{feature.description}</p>
     </div>
   );
 }

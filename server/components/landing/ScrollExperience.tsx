@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
 import FeatureContent from "./FeatureContent";
 import Hero from "./Hero";
 import VisualStage from "./VisualStage";
-import { CINE_QUERY, FEATURES, POSES, type Pose, type StageState } from "./config";
+import { CINE_QUERY, FEATURES, NAV_EVENT, POSES, type Pose, type StageState } from "./config";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -35,7 +35,8 @@ const pose = (p: Pose) => ({
 });
 
 export type NavAnchor = "features" | "leaderboard" | "how-it-works";
-export const NAV_EVENT = "ec:navigate";
+/** NAV_EVENT detail: a navbar anchor or a feature id (from the progress rail). */
+export { NAV_EVENT };
 
 /**
  * Pinned, scroll-scrubbed experience: hero → dashboard showcase (3 features)
@@ -68,7 +69,7 @@ export default function ScrollExperience() {
         const tl = gsap.timeline({ defaults: { ease: "none" } });
         /** Start time of each highlight state, in timeline seconds. */
         const stateStarts: { state: StageState; at: number }[] = [{ state: "hero", at: 0 }];
-        const anchorTimes: Partial<Record<NavAnchor, number>> = {};
+        const anchorTimes: Partial<Record<NavAnchor | StageState, number>> = {};
 
         // ── Hero → dashboard showcase ─────────────────────────────────────
         let t = T.heroHold;
@@ -80,7 +81,8 @@ export default function ScrollExperience() {
           .to(q("[data-glow=dash]"), { opacity: 0.55, duration: T.toDashboard }, t)
           .to(q("[data-ambient=green]"), { opacity: 0.35, duration: T.toDashboard }, t)
           .to(q("[data-streak=green]"), { opacity: 0.3, duration: T.toDashboard }, t);
-        t += T.toDashboard - 0.25;
+        // First feature starts as soon as the hero copy has cleared, while the dashboard settles.
+        t += T.toDashboard * 0.6;
 
         const showFeature = (id: StageState, isLastOfPhase: boolean) => {
           const block = q(`[data-feature=${id}]`);
@@ -90,6 +92,7 @@ export default function ScrollExperience() {
           stateStarts.push({ state: id, at: t });
           const anchor = FEATURES.find((f) => f.id === id)!.anchor;
           if (anchor) anchorTimes[anchor] = t + T.textIn;
+          anchorTimes[id] = t + T.textIn;
 
           tl.fromTo(block, { autoAlpha: 0, x: 40 * side }, { autoAlpha: 1, x: 0, duration: T.textIn, ease: "power2.out" }, t)
             .to(words, { opacity: 1, x: 0, y: 0, z: 0, rotationY: 0, rotationX: 0, duration: T.textIn, stagger: 0.06, ease: "power2.out" }, t)
@@ -122,7 +125,7 @@ export default function ScrollExperience() {
           .to(q("[data-ambient=green]"), { opacity: 1, duration: ex }, t)
           .to(q("[data-streak=green]"), { opacity: 1, duration: ex }, t)
           .to(q("[data-streak=orange]"), { opacity: 0.4, duration: ex }, t);
-        t += ex - 0.35;
+        t += ex * 0.7;
 
         tutorFeatures.forEach((f, i) => showFeature(f.id, i === tutorFeatures.length - 1));
         t += T.endHold;
@@ -158,7 +161,7 @@ export default function ScrollExperience() {
         document.fonts?.ready.then(() => alive && ScrollTrigger.refresh());
         // ── Navbar anchors scroll to a point on the timeline ─────────────
         const onNav = (e: Event) => {
-          const anchor = (e as CustomEvent<NavAnchor>).detail;
+          const anchor = (e as CustomEvent<NavAnchor | StageState>).detail;
           const time = anchorTimes[anchor];
           if (time == null) return;
           const y = st.start + (time / tl.duration()) * (st.end - st.start);

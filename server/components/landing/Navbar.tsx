@@ -6,14 +6,8 @@ import { LogoMark } from "./icons";
 import { CINE_QUERY } from "./config";
 import { NAV_EVENT, type NavAnchor } from "./ScrollExperience";
 
-export const DOCS_URL = "https://github.com/J33rry/EdgeCase#readme";
-
-const LINKS: { label: string; anchor?: NavAnchor; href: string }[] = [
-  { label: "Features", anchor: "features", href: "#features" },
-  { label: "How it works", anchor: "how-it-works", href: "#how-it-works" },
-  { label: "Leaderboard", anchor: "leaderboard", href: "#leaderboard" },
-  { label: "Docs", href: DOCS_URL },
-];
+import { DOCS_URL } from "./config";
+export { DOCS_URL };
 
 /** In the pinned experience, anchors are points on the scroll timeline rather than elements. */
 export function navigateTo(anchor: NavAnchor, e: MouseEvent<HTMLAnchorElement>) {
@@ -42,10 +36,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const go = (anchor: NavAnchor | undefined) => (e: MouseEvent<HTMLAnchorElement>) => {
-    if (anchor) navigateTo(anchor, e);
-  };
-
   return (
     <motion.header
       initial={{ opacity: 0, y: -12 }}
@@ -61,29 +51,13 @@ export default function Navbar() {
         style={{ "--edge": "linear-gradient(100deg, rgba(255,174,0,0.35), rgba(255,255,255,0.06) 40%, rgba(0,229,160,0.35))" } as CSSProperties}
       />
       <nav className={`relative mx-auto flex max-w-[1720px] items-center justify-between px-4 transition-[height,padding] duration-500 sm:px-8 lg:px-[4.2vw] ${floating ? "mt-3 h-[clamp(56px,7vh,72px)] lg:px-[calc(4.2vw+12px)]" : "h-[clamp(64px,8.5vh,96px)]"}`}>
-        <a href="#top" className="flex items-center gap-[0.55em] text-[clamp(20px,1.95vw,34px)] font-bold tracking-[-0.02em] text-white" aria-label="EdgeCase home">
+        <a href="/#top" className="flex items-center gap-[0.55em] text-[clamp(20px,1.95vw,34px)] font-bold tracking-[-0.02em] text-white" aria-label="EdgeCase home">
           <LogoMark className="h-[1.25em] w-[1.25em]" />
           EdgeCase
         </a>
-        <ul className="hidden items-center gap-[clamp(28px,3.6vw,68px)] md:flex">
-          {LINKS.map((l) => (
-            <li key={l.label}>
-              <a
-                href={l.href}
-                onClick={go(l.anchor)}
-                {...(l.anchor ? {} : { target: "_blank", rel: "noreferrer" })}
-                className="text-[clamp(15px,1.35vw,23px)] tracking-[-0.01em] text-white/85 transition-colors hover:text-white"
-              >
-                {l.label}
-              </a>
-            </li>
-          ))}
-        </ul>
         <a
           href={DOCS_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-full border border-white/15 px-4 py-1.5 text-sm text-white/85 md:hidden"
+          className="text-[clamp(15px,1.35vw,23px)] tracking-[-0.01em] text-white/85 transition-colors hover:text-white"
         >
           Docs
         </a>

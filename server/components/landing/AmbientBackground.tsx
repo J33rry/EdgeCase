@@ -28,6 +28,8 @@ export default function AmbientBackground({ className = "" }: { className?: stri
         }}
       />
 
+      <div className="ec-grid absolute inset-0" />
+
       <svg
         data-streaks
         className="absolute inset-0 h-full w-full"
@@ -78,6 +80,8 @@ export default function AmbientBackground({ className = "" }: { className?: stri
         className="absolute inset-0"
         style={{ background: "radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,0.65) 100%)" }}
       />
+      {/* Fade the washes into the page colour so the next section continues seamlessly. */}
+      <div className="absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-b from-transparent to-[#080a09]" />
     </div>
   );
 }

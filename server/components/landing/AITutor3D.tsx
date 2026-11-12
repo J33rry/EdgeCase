@@ -121,6 +121,7 @@ function Replies() {
         <p style={{ "--i": 3 } as CSSProperties}>Otherwise remember this number and keep going. One pass.</p>
         <p style={{ "--i": 4 } as CSSProperties} className="mt-auto text-[10.5px] text-white/50">
           Time <span className="text-ec-green">O(n)</span> · Space <span className="text-ec-green">O(n)</span>
+          <span className="tz-caret" />
         </p>
       </Reply>
 
@@ -134,6 +135,7 @@ function Replies() {
             <span className={`mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full ${tone === "green" ? "bg-ec-green" : "bg-ec-orange"}`} />
             <p>
               <Code tone={tone as "green" | "orange"}>{code}</Code> {text}
+              {i === 2 && <span className="tz-caret" />}
             </p>
           </div>
         ))}
@@ -152,6 +154,7 @@ function Replies() {
         </div>
         <p style={{ "--i": 3 } as CSSProperties} className="mt-auto text-[10.5px] text-white/50">
           Map operations per hit <span className="text-ec-green">2 → 1</span> · still O(n)
+          <span className="tz-caret" />
         </p>
       </Reply>
     </div>

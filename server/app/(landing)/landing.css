@@ -11,6 +11,7 @@
   --color-ec-muted: #8a8f8c;
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -329,7 +330,7 @@ html {
 .ec-scope[data-state="efficiency"] .tz-reply[data-for="efficiency"] > * {
   opacity: 1;
   transform: none;
-  transition-delay: calc(0.3s + var(--i, 0) * 0.14s);
+  transition-delay: calc(0.45s + var(--i, 0) * 0.32s);
 }
 
 .tz-typing {
@@ -504,28 +505,441 @@ html {
   }
 }
 
-/* Feature step indicator (cinematic stage) */
-.ec-steps {
+/* ───────────────────────── Tour progress rail ───────────────────────── */
+
+.ec-rail {
+  --edge: linear-gradient(100deg, rgba(255, 174, 0, 0.3), rgba(255, 255, 255, 0.06) 45%, rgba(0, 229, 160, 0.3));
   opacity: 0;
-  transition: opacity 0.6s var(--ec-ease);
+  visibility: hidden;
+  transform: translate(-50%, 12px);
+  transition:
+    opacity 0.6s var(--ec-ease),
+    transform 0.6s var(--ec-ease),
+    visibility 0s linear 0.6s;
 }
-.ec-scope:not([data-state="hero"]) .ec-steps {
+.ec-scope:not([data-state="hero"]) .ec-rail {
   opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
 }
-.ec-steps li {
-  transition: width 0.6s var(--ec-ease), background-color 0.6s var(--ec-ease), box-shadow 0.6s var(--ec-ease);
+.ec-rail-item {
+  position: relative;
+  border: 1px solid transparent;
+  transition:
+    color 0.5s var(--ec-ease),
+    background-color 0.5s var(--ec-ease),
+    border-color 0.5s var(--ec-ease),
+    box-shadow 0.5s var(--ec-ease);
+}
+.ec-rail-item:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+.ec-rail-index {
+  transition: color 0.5s var(--ec-ease);
 }
 .ec-scope[data-state="stats"] [data-step="stats"],
 .ec-scope[data-state="progress"] [data-step="progress"],
 .ec-scope[data-state="leaderboard"] [data-step="leaderboard"] {
-  width: 44px;
-  background: #ffae00;
-  box-shadow: 0 0 10px rgba(255, 174, 0, 0.7);
+  --acc: 255, 174, 0;
 }
 .ec-scope[data-state="explain"] [data-step="explain"],
 .ec-scope[data-state="edge"] [data-step="edge"],
 .ec-scope[data-state="efficiency"] [data-step="efficiency"] {
-  width: 44px;
+  --acc: 0, 229, 160;
+}
+.ec-scope[data-state="stats"] [data-step="stats"],
+.ec-scope[data-state="progress"] [data-step="progress"],
+.ec-scope[data-state="leaderboard"] [data-step="leaderboard"],
+.ec-scope[data-state="explain"] [data-step="explain"],
+.ec-scope[data-state="edge"] [data-step="edge"],
+.ec-scope[data-state="efficiency"] [data-step="efficiency"] {
+  color: #fff;
+  background-color: rgba(var(--acc), 0.14);
+  border-color: rgba(var(--acc), 0.55);
+  box-shadow: 0 0 18px rgba(var(--acc), 0.28);
+}
+.ec-scope[data-state="stats"] [data-step="stats"] .ec-rail-index,
+.ec-scope[data-state="progress"] [data-step="progress"] .ec-rail-index,
+.ec-scope[data-state="leaderboard"] [data-step="leaderboard"] .ec-rail-index,
+.ec-scope[data-state="explain"] [data-step="explain"] .ec-rail-index,
+.ec-scope[data-state="edge"] [data-step="edge"] .ec-rail-index,
+.ec-scope[data-state="efficiency"] [data-step="efficiency"] .ec-rail-index {
+  color: rgb(var(--acc));
+}
+
+/* ───────────────────────── Connector lines ───────────────────────── */
+
+.ec-connector {
+  opacity: 0;
+  transition: opacity 0.4s var(--ec-ease);
+}
+.ec-connector-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.65;
+  filter: drop-shadow(0 0 4px currentColor);
+  transition: stroke-dashoffset 0.25s ease-in;
+}
+.ec-connector-end,
+.ec-connector-start {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  transition: transform 0.25s var(--ec-ease);
+}
+.ec-connector-end {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.ec-connector-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+.ec-scope[data-state="stats"] [data-connector="stats"],
+.ec-scope[data-state="progress"] [data-connector="progress"],
+.ec-scope[data-state="leaderboard"] [data-connector="leaderboard"],
+.ec-scope[data-state="explain"] [data-connector="explain"],
+.ec-scope[data-state="edge"] [data-connector="edge"],
+.ec-scope[data-state="efficiency"] [data-connector="efficiency"] {
+  opacity: 1;
+  --on: 1;
+}
+[data-connector] {
+  --on: 0;
+}
+.ec-scope[data-state="stats"] [data-connector="stats"] :is(.ec-connector-start, .ec-connector-end),
+.ec-scope[data-state="progress"] [data-connector="progress"] :is(.ec-connector-start, .ec-connector-end),
+.ec-scope[data-state="leaderboard"] [data-connector="leaderboard"] :is(.ec-connector-start, .ec-connector-end),
+.ec-scope[data-state="explain"] [data-connector="explain"] :is(.ec-connector-start, .ec-connector-end),
+.ec-scope[data-state="edge"] [data-connector="edge"] :is(.ec-connector-start, .ec-connector-end),
+.ec-scope[data-state="efficiency"] [data-connector="efficiency"] :is(.ec-connector-start, .ec-connector-end) {
+  transform: scale(1);
+  transition-delay: 0.45s;
+}
+.ec-scope[data-state="stats"] [data-connector="stats"] .ec-connector-start,
+.ec-scope[data-state="progress"] [data-connector="progress"] .ec-connector-start,
+.ec-scope[data-state="leaderboard"] [data-connector="leaderboard"] .ec-connector-start,
+.ec-scope[data-state="explain"] [data-connector="explain"] .ec-connector-start,
+.ec-scope[data-state="edge"] [data-connector="edge"] .ec-connector-start,
+.ec-scope[data-state="efficiency"] [data-connector="efficiency"] .ec-connector-start {
+  transition-delay: 0.35s;
+}
+.ec-scope[data-state="stats"] [data-connector="stats"] .ec-connector-line,
+.ec-scope[data-state="progress"] [data-connector="progress"] .ec-connector-line,
+.ec-scope[data-state="leaderboard"] [data-connector="leaderboard"] .ec-connector-line,
+.ec-scope[data-state="explain"] [data-connector="explain"] .ec-connector-line,
+.ec-scope[data-state="edge"] [data-connector="edge"] .ec-connector-line,
+.ec-scope[data-state="efficiency"] [data-connector="efficiency"] .ec-connector-line {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.9s 0.4s var(--ec-ease);
+}
+.ec-scope[data-state="stats"] [data-connector="stats"] .ec-connector-pulse,
+.ec-scope[data-state="progress"] [data-connector="progress"] .ec-connector-pulse,
+.ec-scope[data-state="leaderboard"] [data-connector="leaderboard"] .ec-connector-pulse,
+.ec-scope[data-state="explain"] [data-connector="explain"] .ec-connector-pulse,
+.ec-scope[data-state="edge"] [data-connector="edge"] .ec-connector-pulse,
+.ec-scope[data-state="efficiency"] [data-connector="efficiency"] .ec-connector-pulse {
+  animation: connector-pulse 2s 1.2s ease-out infinite;
+}
+@keyframes connector-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+/* ───────────────────────── Stronger highlights ─────────────────────────
+   The lit zone lifts toward the viewer while the rest recedes. */
+
+.ec-scope:is([data-state="stats"], [data-state="progress"]) .dz-progress,
+.ec-scope[data-state="leaderboard"] .dz-leader {
+  transform: translateY(-2px) scale(1.04);
+  z-index: 2;
+}
+.ec-scope[data-state="progress"] .dz-progress {
+  border-color: rgba(255, 174, 0, 0.6);
+  background-color: rgba(255, 174, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(255, 174, 0, 0.25),
+    0 0 26px rgba(255, 174, 0, 0.3),
+    0 18px 40px -12px rgba(0, 0, 0, 0.8);
+}
+.ec-scope:is([data-state="stats"], [data-state="progress"], [data-state="leaderboard"]) .dz-head {
+  opacity: 0.35;
+}
+.ec-scope:is([data-state="stats"], [data-state="progress"]) .dz-leader,
+.ec-scope[data-state="leaderboard"] .dz-progress {
+  opacity: 0.22;
+  filter: saturate(0) brightness(0.6) blur(0.6px);
+}
+.ec-scope:is([data-state="explain"], [data-state="edge"], [data-state="efficiency"]) .tz-act[data-act] {
+  transition-property: opacity, filter, background-color, border-color, box-shadow, transform;
+}
+.ec-scope[data-state="explain"] .tz-act[data-act="explain"],
+.ec-scope[data-state="edge"] .tz-act[data-act="edge"],
+.ec-scope[data-state="efficiency"] .tz-act[data-act="efficiency"] {
+  animation: act-press 0.6s 0.1s var(--ec-ease) both;
+}
+@keyframes act-press {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1.03);
+  }
+}
+
+/* ───────────────────────── Live AI Tutor ───────────────────────── */
+
+/* Idle "thinking" dots in the hero, and a brief think before each reply.
+   Distinct animation names per state so the flash replays on every change. */
+.tz-typing span {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.tz-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.tz-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    transform: none;
+    background-color: rgba(0, 229, 160, 0.3);
+  }
+  30% {
+    transform: translateY(-3px);
+    background-color: rgba(0, 229, 160, 0.9);
+  }
+}
+.ec-scope[data-state="explain"] .tz-typing {
+  animation: think-a 0.5s linear both;
+}
+.ec-scope[data-state="edge"] .tz-typing {
+  animation: think-b 0.5s linear both;
+}
+.ec-scope[data-state="efficiency"] .tz-typing {
+  animation: think-c 0.5s linear both;
+}
+@keyframes think-a {
+  0%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes think-b {
+  0%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes think-c {
+  0%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.ec-scope:is([data-state="explain"], [data-state="edge"], [data-state="efficiency"]) .tz-typing {
+  opacity: 0;
+}
+
+/* Replies stream in line by line, left to right, after the think. */
+.ec-scope[data-state="explain"] .tz-reply[data-for="explain"] > *,
+.ec-scope[data-state="edge"] .tz-reply[data-for="edge"] > *,
+.ec-scope[data-state="efficiency"] .tz-reply[data-for="efficiency"] > * {
+  animation: stream-in 0.7s var(--ec-ease) both;
+  animation-delay: calc(0.45s + var(--i, 0) * 0.32s);
+}
+@keyframes stream-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.tz-caret {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  border-radius: 1px;
   background: #00e5a0;
-  box-shadow: 0 0 10px rgba(0, 229, 160, 0.7);
+  box-shadow: 0 0 6px rgba(0, 229, 160, 0.8);
+  animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.code-tag {
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+.ec-scope:is([data-state="explain"], [data-state="edge"], [data-state="efficiency"]) .code-tag {
+  transition-delay: 0.9s;
+}
+
+/* ───────────────────────── Texture & buttons ───────────────────────── */
+
+.ec-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.btn-primary {
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.6) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: btn-sheen 6s 2s var(--ec-ease) infinite;
+}
+.btn-primary:hover::after {
+  animation: btn-sheen-hover 0.8s var(--ec-ease) both;
+}
+@keyframes btn-sheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  18%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes btn-sheen-hover {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition:
+    color 0.3s var(--ec-ease),
+    background-color 0.3s var(--ec-ease),
+    border-color 0.3s var(--ec-ease);
+}
+.btn-ghost:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 229, 160, 0.5);
+}
+
+/* Faint perspective grid behind the hero. */
+.ec-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(70% 60% at 60% 45%, #000 0%, transparent 75%);
+}
+
+/* ───────────────────────────── Docs prose ───────────────────────────── */
+
+.docs-prose {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16.5px;
+  line-height: 1.75;
+}
+.docs-prose > p + p {
+  margin-top: 1em;
+}
+.docs-prose strong {
+  color: #fff;
+  font-weight: 600;
+}
+.docs-prose a {
+  color: #00e5a0;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 229, 160, 0.35);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.docs-prose a:hover {
+  text-decoration-color: #00e5a0;
+}
+.docs-prose a.btn-primary,
+.docs-prose a.btn-ghost {
+  text-decoration: none;
+}
+.docs-prose > ul {
+  margin: 1em 0;
+}
+.docs-prose > ul > li {
+  position: relative;
+  padding-left: 1.4em;
+}
+.docs-prose > ul > li + li {
+  margin-top: 0.6em;
+}
+.docs-prose > ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0.2em;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: #ffae00;
+  box-shadow: 0 0 8px rgba(255, 174, 0, 0.6);
+}
+.docs-code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: #ffd27a;
+  background: rgba(255, 174, 0, 0.08);
+  border: 1px solid rgba(255, 174, 0, 0.16);
+  border-radius: 6px;
+  padding: 0.1em 0.4em;
+  overflow-wrap: anywhere;
+}
+.docs-steps {
+  counter-reset: step;
+}
+.docs-steps > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.6em;
+  min-height: 1.9em;
+}
+.docs-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  display: grid;
+  place-items: center;
+  width: 1.75em;
+  height: 1.75em;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #00e5a0;
+  background: rgba(0, 229, 160, 0.1);
+  border: 1px solid rgba(0, 229, 160, 0.4);
 }
