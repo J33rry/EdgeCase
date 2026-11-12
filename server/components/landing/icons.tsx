@@ -20,7 +20,7 @@ export function LogoMark({ size = 32, ...props }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden {...props}>
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={id} gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="36" y2="36">
           <stop offset="0" stopColor="#FFC533" />
           <stop offset="1" stopColor="#FF9500" />
         </linearGradient>

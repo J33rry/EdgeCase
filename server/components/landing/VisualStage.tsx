@@ -6,6 +6,7 @@ import AITutor3D from "./AITutor3D";
 import AmbientBackground from "./AmbientBackground";
 import Dashboard3D from "./Dashboard3D";
 import TiltCard from "./TiltCard";
+import { useIntroReady } from "./introReady";
 import { CONNECTORS, FEATURES, NAV_EVENT, POSES, WORLD_H, WORLD_W, type Pose, type StageState } from "./config";
 
 /** CSS transform equivalent to the GSAP pose, so the first paint (before JS) is already correct. */
@@ -27,12 +28,13 @@ const VisualStage = forwardRef<
   { refs: StageRefs; initialState?: StageState; children?: ReactNode }
 >(function VisualStage({ refs, initialState = "hero", children }, ref) {
   const still = !!useReducedMotion();
+  const ready = useIntroReady();
   const enter = (delay: number) =>
     still
       ? {}
       : {
           initial: { opacity: 0, y: 60 },
-          animate: { opacity: 1, y: 0 },
+          animate: ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 },
           transition: { duration: 1.3, delay, ease: [0.22, 1, 0.36, 1] as const },
         };
 

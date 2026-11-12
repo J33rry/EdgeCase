@@ -3,11 +3,13 @@ import ScrollExperience from "@/components/landing/ScrollExperience";
 import MobileExperience from "@/components/landing/MobileExperience";
 import FinalCTA from "@/components/landing/FinalCTA";
 import Footer from "@/components/landing/Footer";
+import LoadingScreen from "@/components/landing/LoadingScreen";
 
 export default function LandingPage() {
   return (
     <main id="top" className="relative overflow-x-clip">
-      <Navbar />
+      <LoadingScreen />
+      <Navbar intro />
       {/* Cinematic pinned experience: wide screens with motion allowed. */}
       <div className="hidden cine:block">
         <ScrollExperience />

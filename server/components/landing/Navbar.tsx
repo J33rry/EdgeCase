@@ -4,6 +4,7 @@ import { useEffect, useState, type CSSProperties, type MouseEvent } from "react"
 import { motion } from "motion/react";
 import { LogoMark } from "./icons";
 import { CINE_QUERY } from "./config";
+import { useIntroReady } from "./introReady";
 import { NAV_EVENT, type NavAnchor } from "./ScrollExperience";
 
 import { DOCS_URL } from "./config";
@@ -17,10 +18,13 @@ export function navigateTo(anchor: NavAnchor, e: MouseEvent<HTMLAnchorElement>) 
   }
 }
 
-export default function Navbar() {
+/** `intro`: hold the entrance until the landing page's loading screen lifts. */
+export default function Navbar({ intro = false }: { intro?: boolean }) {
   // Zentry-style floating nav: hidden while scrolling down, back (as a glass pill) on scroll up.
   const [floating, setFloating] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const introReady = useIntroReady();
+  const ready = !intro || introReady;
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -39,7 +43,7 @@ export default function Navbar() {
   return (
     <motion.header
       initial={{ opacity: 0, y: -12 }}
-      animate={{ opacity: hidden ? 0 : 1, y: hidden ? -110 : 0 }}
+      animate={!ready ? { opacity: 0, y: -12 } : { opacity: hidden ? 0 : 1, y: hidden ? -110 : 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-x-0 top-0 z-50"
     >

@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { GithubIcon, PuzzleIcon } from "./icons";
 
 import { REPO_URL, STORE_URL } from "./config";
+import { useIntroReady } from "./introReady";
 
 /** Secondary action next to the primary CTA. */
 export function GithubButton({ className = "", iconSize = 20 }: { className?: string; iconSize?: number }) {
@@ -64,9 +65,13 @@ export function AddToBrowser({ className = "", iconSize = 24 }: { className?: st
   );
 }
 
-const rise = (delay: number, still: boolean) => ({
-  initial: still ? false : ({ opacity: 0, y: 28, filter: "blur(6px)" } as const),
-  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+const HIDDEN = { opacity: 0, y: 28, filter: "blur(6px)" } as const;
+const SHOWN = { opacity: 1, y: 0, filter: "blur(0px)" } as const;
+
+/** Entrance for one hero line; holds the hidden pose until the loading screen lifts. */
+const rise = (delay: number, still: boolean, ready: boolean) => ({
+  initial: still ? false : HIDDEN,
+  animate: still || ready ? SHOWN : HIDDEN,
   transition: { duration: 0.9, delay, ease: [0.22, 1, 0.36, 1] as const },
 });
 
@@ -76,23 +81,24 @@ const rise = (delay: number, still: boolean) => ({
  */
 export default function Hero({ variant }: { variant: "stage" | "flow" }) {
   const still = !!useReducedMotion();
+  const ready = useIntroReady();
 
   if (variant === "stage") {
     return (
       <div className="pointer-events-none absolute left-[66px] top-[230px] w-[600px]">
-        <motion.h1 {...rise(0.1, still)} className="font-display text-[100px] font-bold leading-[0.92] tracking-[-0.045em] text-white">
+        <motion.h1 {...rise(0.1, still, ready)} className="font-display text-[100px] font-bold leading-[0.92] tracking-[-0.045em] text-white">
           Ship better
           <br />
           code.
         </motion.h1>
-        <motion.p {...rise(0.25, still)} className="mt-6 text-[31px] tracking-[-0.015em] text-white/65">
+        <motion.p {...rise(0.25, still, ready)} className="mt-6 text-[31px] tracking-[-0.015em] text-white/65">
           <Tagline />
         </motion.p>
-        <motion.div {...rise(0.4, still)} className="pointer-events-auto mt-11 flex w-fit items-center gap-4">
+        <motion.div {...rise(0.4, still, ready)} className="pointer-events-auto mt-11 flex w-fit items-center gap-4">
           <AddToBrowser className="h-[78px] rounded-[18px] px-9 text-[28px] tracking-[-0.02em]" iconSize={32} />
           <GithubButton className="h-[78px] rounded-[18px] px-7 text-[22px]" iconSize={24} />
         </motion.div>
-        <motion.div {...rise(0.55, still)}>
+        <motion.div {...rise(0.55, still, ready)}>
           <TrustLine className="mt-7 w-fit text-[15px]" />
         </motion.div>
       </div>
@@ -102,21 +108,21 @@ export default function Hero({ variant }: { variant: "stage" | "flow" }) {
   return (
     <div className="relative z-10 text-center sm:text-left">
       <motion.h1
-        {...rise(0.1, still)}
+        {...rise(0.1, still, ready)}
         className="font-display text-[clamp(3rem,13vw,5.75rem)] font-bold leading-[0.92] tracking-[-0.045em] text-white"
       >
         Ship better
         <br />
         code.
       </motion.h1>
-      <motion.p {...rise(0.25, still)} className="mt-4 text-[clamp(1.15rem,4.6vw,1.75rem)] tracking-[-0.015em] text-white/65">
+      <motion.p {...rise(0.25, still, ready)} className="mt-4 text-[clamp(1.15rem,4.6vw,1.75rem)] tracking-[-0.015em] text-white/65">
         <Tagline />
       </motion.p>
-      <motion.div {...rise(0.4, still)} className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+      <motion.div {...rise(0.4, still, ready)} className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
         <AddToBrowser className="h-14 rounded-2xl px-7 text-lg sm:h-16 sm:text-xl" iconSize={22} />
         <GithubButton className="h-14 rounded-2xl px-6 text-base sm:h-16 sm:text-lg" />
       </motion.div>
-      <motion.div {...rise(0.55, still)}>
+      <motion.div {...rise(0.55, still, ready)}>
         <TrustLine className="mt-5 justify-center text-sm sm:justify-start" />
       </motion.div>
     </div>
